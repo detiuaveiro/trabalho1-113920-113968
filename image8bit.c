@@ -341,9 +341,13 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
 // This internal function is used in ImageGetPixel / ImageSetPixel.
 // The returned index must satisfy (0 <= index < img->width*img->height)
 static inline int G(Image img, int x, int y) {
-  int index;
-  // Insert your code here!
+  assert(img != NULL);
+  assert(0 <= x && x < img->width);
+  assert(0 <= y && y < img->height);
+
+  int index = y * img->width + x;
   assert(0 <= index && index < img->width * img->height);
+
   return index;
 }
 
@@ -403,17 +407,15 @@ void ImageThreshold(Image img, uint8 thr) { ///
 void ImageBrighten(Image img, double factor) {
   assert(img != NULL);
 
-  int size = img->width * img->height;
-
-  for (int i = 0; i < size; i++) {
-    uint8 *p = &img->pixel[i];
-
-    int new_value = (int)(*p * factor);
-    new_value = new_value > img->maxval ? img->maxval
-                : new_value < 0         ? 0
-                                        : new_value;
-
-    *p = (uint8)new_value;
+  for (int i = 0; i < ImageWidth(img); i++) {
+    for (int j = 0; j < ImageHeight(img); j++) {
+      uint8 pixel = ImageGetPixel(img, i, j);
+      uint8 newPixel = (uint8)(pixel * factor);
+      newPixel = newPixel > img->maxval ? img->maxval
+                 : newPixel < 0         ? 0
+                                        : newPixel;
+      ImageSetPixel(img, i, j, newPixel);
+    }
   }
 }
 
@@ -449,7 +451,8 @@ Image ImageRotate(Image img) { ///
 
   for (int y = 0; y < img->height; y++) {
     for (int x = 0; x < img->width; x++) {
-      ImageSetPixel(rotated_image, y, img->width - x - 1, ImageGetPixel(img, x, y));
+      ImageSetPixel(rotated_image, y, img->width - x - 1,
+                    ImageGetPixel(img, x, y));
     }
   }
 
@@ -474,7 +477,8 @@ Image ImageMirror(Image img) { ///
 
   for (int y = 0; y < img->height; y++) {
     for (int x = 0; x < img->width; x++) {
-      ImageSetPixel(mirrored_image, img->width - x - 1, y, ImageGetPixel(img, x, y));
+      ImageSetPixel(mirrored_image, img->width - x - 1, y,
+                    ImageGetPixel(img, x, y));
     }
   }
 
@@ -520,7 +524,6 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
-
   for (int cy = 0; cy < img2->height; cy++) {
     for (int cx = 0; cx < img2->width; cx++) {
       ImageSetPixel(img1, x + cx, y + cy, ImageGetPixel(img2, cx, cy));
@@ -546,8 +549,8 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
 
       int new_value = (int)(p1 * (1.0 - alpha) + p2 * alpha);
       new_value = new_value > img1->maxval ? img1->maxval
-                  : new_value < 0         ? 0
-                                          : new_value;
+                  : new_value < 0          ? 0
+                                           : new_value;
 
       ImageSetPixel(img1, x + cx, y + cy, (uint8)new_value);
     }
