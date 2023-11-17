@@ -449,8 +449,7 @@ Image ImageRotate(Image img) { ///
 
   for (int y = 0; y < img->height; y++) {
     for (int x = 0; x < img->width; x++) {
-      ImageSetPixel(rotated_image, y, img->width - x - 1,
-                    ImageGetPixel(img, x, y));
+      ImageSetPixel(rotated_image, y, img->width - x - 1, ImageGetPixel(img, x, y));
     }
   }
 
@@ -475,8 +474,7 @@ Image ImageMirror(Image img) { ///
 
   for (int y = 0; y < img->height; y++) {
     for (int x = 0; x < img->width; x++) {
-      ImageSetPixel(mirrored_image, img->width - x - 1, y,
-                    ImageGetPixel(img, x, y));
+      ImageSetPixel(mirrored_image, img->width - x - 1, y, ImageGetPixel(img, x, y));
     }
   }
 
