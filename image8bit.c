@@ -509,10 +509,6 @@ Image ImageCrop(Image img, int x, int y, int w, int h) {
   int img_height = ImageHeight(img);
 
   uint8 corner_lu = img->pixel[G(img, x, y)];
-  uint8 corner_ru = img->pixel[G(img, x + w - 1, y)];
-  uint8 corner_ld = img->pixel[G(img, x, y + h - 1)];
-  uint8 corner_rd = img->pixel[G(img, x + w - 1, y + h - 1)];
-
   // Fill corners
   // Top left
   for (int i = 0; i < h; i++) {
@@ -550,22 +546,28 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
 /// Requires: img2 must fit inside img1 at position (x, y).
 /// alpha usually is in [0.0, 1.0], but values outside that interval
 /// may provide interesting effects.  Over/underflows should saturate.
-void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
+void ImageBlend(Image img1, int x, int y, Image img2, double alpha) {
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
 
   for (int cy = 0; cy < img2->height; cy++) {
     for (int cx = 0; cx < img2->width; cx++) {
-      uint8 p1 = ImageGetPixel(img1, x + cx, y + cy);
-      uint8 p2 = ImageGetPixel(img2, cx, cy);
+      uint8 pixel = ImageGetPixel(img1, x + cx, y + cy);
+      double newPixelValue =
+          pixel * (1.0 - alpha) + ImageGetPixel(img2, cx, cy) * alpha;
 
-      int new_value = (int)(p1 * (1.0 - alpha) + p2 * alpha);
-      new_value = new_value > img1->maxval ? img1->maxval
-                  : new_value < 0          ? 0
-                                           : new_value;
+      // Ensure the newPixelValue is within the valid range [0, img1->maxval]
+      if (newPixelValue > (double)img1->maxval) {
+        newPixelValue = (double)img1->maxval;
+      } else if (newPixelValue < 0.0) {
+        newPixelValue = 0.0;
+      }
 
-      ImageSetPixel(img1, x + cx, y + cy, (uint8)new_value);
+      // Round the newPixelValue to the nearest integer
+      int roundedValue = (int)(newPixelValue + 0.5);
+
+      ImageSetPixel(img1, x + cx, y + cy, (uint8)roundedValue);
     }
   }
 }
