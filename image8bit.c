@@ -629,7 +629,6 @@ void ImageBlur(Image img, int dx, int dy) {
   int width = img->width;
   int height = img->height;
 
-  // Temporary storage for the new pixel values
   uint8 newPixels[width * height];
 
   for (int y = 0; y < height; y++) {
@@ -637,7 +636,6 @@ void ImageBlur(Image img, int dx, int dy) {
       int sum = 0;
       int count = 0;
 
-      // Iterate over the surrounding rectangle
       for (int cy = y - dy; cy <= y + dy; cy++) {
         for (int cx = x - dx; cx <= x + dx; cx++) {
           // Check if the position is within image bounds
@@ -647,13 +645,11 @@ void ImageBlur(Image img, int dx, int dy) {
           }
         }
       }
-
-      // Calculate the mean value
-      newPixels[y * width + x] = sum / count;
+      double meanValue = (double)sum / count;
+      newPixels[y * width + x] =
+          (uint8)(meanValue + 0.5); // Add 0.5 for rounding
     }
   }
-
-  // Update the image with the new pixel values
   for (int i = 0; i < width * height; i++) {
     int x = i % width;
     int y = i / width;
