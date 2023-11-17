@@ -611,5 +611,22 @@ void ImageBlur(Image img, int dx, int dy) { ///
 
   int size = img->width * img->height;
 
-  // remember the smart way to do this
+  for (int i = 0; i < size; i++) {
+    int x = i % img->width;
+    int y = i / img->width;
+
+    int sum = 0;
+    int count = 0;
+
+    for (int cy = y - dy; cy <= y + dy; cy++) {
+      for (int cx = x - dx; cx <= x + dx; cx++) {
+        if (ImageValidPos(img, cx, cy)) {
+          sum += ImageGetPixel(img, cx, cy);
+          count++;
+        }
+      }
+    }
+
+    img->pixel[i] = (uint8)(sum / count);
+  }
 }
