@@ -540,6 +540,20 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
+
+  for (int cy = 0; cy < img2->height; cy++) {
+    for (int cx = 0; cx < img2->width; cx++) {
+      uint8 p1 = ImageGetPixel(img1, x + cx, y + cy);
+      uint8 p2 = ImageGetPixel(img2, cx, cy);
+
+      int new_value = (int)(p1 * (1.0 - alpha) + p2 * alpha);
+      new_value = new_value > img1->maxval ? img1->maxval
+                  : new_value < 0         ? 0
+                                          : new_value;
+
+      ImageSetPixel(img1, x + cx, y + cy, (uint8)new_value);
+    }
+  }
 }
 
 /// Compare an image to a subimage of a larger image.
