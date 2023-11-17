@@ -568,8 +568,24 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
 
-  int img2_width = img2->width;
-  int img1_width = img1->width;
+  int width1 = ImageWidth(img1);
+  int height1 = ImageHeight(img1);
+  int width2 = ImageWidth(img2);
+  int height2 = ImageHeight(img2);
+
+  // Iterate over each possible starting position in img1
+  for (int y = 0; y <= height1 - height2; y++) {
+    for (int x = 0; x <= width1 - width2; x++) {
+      // Check if img2 matches img1 at (x, y)
+      if (ImageMatchSubImage(img1, x, y, img2)) {
+        *px = x;
+        *py = y;
+        return 1; // Match found
+      }
+    }
+  }
+
+  return 0; // No match found
 }
 
 /// Filtering
