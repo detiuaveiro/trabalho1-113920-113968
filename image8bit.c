@@ -440,7 +440,21 @@ void ImageBrighten(Image img, double factor) {
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageRotate(Image img) { ///
   assert(img != NULL);
-  // Insert your code here!
+  
+  Image rotated_image = ImageCreate(img->height, img->width, img->maxval);
+  if (rotated_image == NULL) {
+    errno = ENOMEM;
+    error(0, errno, "Failed to alocate memory for rotated image");
+    return NULL;
+  }
+
+  for (int y = 0; y < img->height; y++) {
+    for (int x = 0; x < img->width; x++) {
+      ImageSetPixel(rotated_image, y, img->width - x - 1, ImageGetPixel(img, x, y));
+    }
+  }
+
+  return rotated_image;
 }
 
 /// Mirror an image = flip left-right.
@@ -452,7 +466,21 @@ Image ImageRotate(Image img) { ///
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageMirror(Image img) { ///
   assert(img != NULL);
-  // Insert your code here!
+  
+  Image mirrored_image = ImageCreate(img->width, img->height, img->maxval);
+  if (mirrored_image == NULL) {
+    errno = ENOMEM;
+    error(0, errno, "Failed to alocate memory for mirrored image");
+    return NULL;
+  }
+
+  for (int y = 0; y < img->height; y++) {
+    for (int x = 0; x < img->width; x++) {
+      ImageSetPixel(mirrored_image, img->width - x - 1, y, ImageGetPixel(img, x, y));
+    }
+  }
+
+  return mirrored_image;
 }
 
 /// Crop a rectangular subimage from img.
@@ -470,7 +498,19 @@ Image ImageMirror(Image img) { ///
 Image ImageCrop(Image img, int x, int y, int w, int h) { ///
   assert(img != NULL);
   assert(ImageValidRect(img, x, y, w, h));
-  // Insert your code here!
+  
+  Image cropped_image = ImageCreate(w, h, img->maxval);
+  if (cropped_image == NULL) {
+    errno = ENOMEM;
+    error(0, errno, "Failed to alocate memory for cropped image");
+    return NULL;
+  }
+
+  for (int cy = 0; cy < h; cy++) {
+    for (int cx = 0; cx < w; cx++) {
+      ImageSetPixel(cropped_image, cx, cy, ImageGetPixel(img, x + cx, y + cy));
+    }
+  }
 }
 
 /// Operations on two images
@@ -483,7 +523,12 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
+  
+  for (int cy = 0; cy < img2->height; cy++) {
+    for (int cx = 0; cx < img2->width; cx++) {
+      ImageSetPixel(img1, x + cx, y + cy, ImageGetPixel(img2, cx, cy));
+    }
+  }
 }
 
 /// Blend an image into a larger image.
@@ -496,7 +541,7 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
+  
 }
 
 /// Compare an image to a subimage of a larger image.
