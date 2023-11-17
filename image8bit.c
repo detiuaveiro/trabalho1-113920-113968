@@ -549,7 +549,14 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidPos(img1, x, y));
-  // Insert your code here!
+
+  for (int i = 0; i < img2->width; i++) {
+    for (int j = 0; j < img2->height; j++) {
+      if (ImageGetPixel(img1, x + i, y + j) != ImageGetPixel(img2, i, j)) {
+        return 0;
+      }
+    }
+  }
 }
 
 /// Locate a subimage inside another image.
