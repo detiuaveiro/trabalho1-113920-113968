@@ -495,7 +495,7 @@ Image ImageMirror(Image img) { ///
 /// On success, a new image is returned.
 /// (The caller is responsible for destroying the returned image!)
 /// On failure, returns NULL and errno/errCause are set accordingly.
-Image ImageCrop(Image img, int x, int y, int w, int h) { ///
+Image ImageCrop(Image img, int x, int y, int w, int h) {
   assert(img != NULL);
   assert(ImageValidRect(img, x, y, w, h));
 
@@ -505,11 +505,26 @@ Image ImageCrop(Image img, int x, int y, int w, int h) { ///
     return NULL;
   }
 
-  for (int cy = 0; cy < h; cy++) {
-    for (int cx = 0; cx < w; cx++) {
-      ImageSetPixel(cropped_image, cx, cy, ImageGetPixel(img, x + cx, y + cy));
+  int img_width = ImageWidth(img);
+  int img_height = ImageHeight(img);
+
+  uint8 corner_lu = img->pixel[G(img, x, y)];
+  uint8 corner_ru = img->pixel[G(img, x + w - 1, y)];
+  uint8 corner_ld = img->pixel[G(img, x, y + h - 1)];
+  uint8 corner_rd = img->pixel[G(img, x + w - 1, y + h - 1)];
+
+  // Fill corners
+  // Top left
+  for (int i = 0; i < h; i++) {
+    for (int j = 0; j < w; j++) {
+      ImageSetPixel(cropped_image, j, i,
+                    x + j < img_width && y + i < img_height
+                        ? img->pixel[G(img, x + j, y + i)]
+                        : corner_lu);
     }
   }
+
+  return cropped_image;
 }
 
 /// Operations on two images
