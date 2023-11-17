@@ -433,6 +433,21 @@ void ImageBrighten(Image img, double factor) {
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageRotate(Image img) { ///
   assert(img != NULL);
+
+  Image rotated_image = ImageCreate(img->height, img->width, img->maxval);
+  if (rotated_image == NULL) {
+    errno = ENOMEM;
+    return NULL;
+  }
+
+  for (int y = 0; y < img->height; y++) {
+    for (int x = 0; x < img->width; x++) {
+      ImageSetPixel(rotated_image, y, img->width - x - 1,
+                    ImageGetPixel(img, x, y));
+    }
+  }
+
+  return rotated_image;
 }
 
 /// Mirror an image = flip left-right.
@@ -444,7 +459,21 @@ Image ImageRotate(Image img) { ///
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageMirror(Image img) { ///
   assert(img != NULL);
-  // Insert your code here!
+
+  Image mirrored_image = ImageCreate(img->width, img->height, img->maxval);
+  if (mirrored_image == NULL) {
+    errno = ENOMEM;
+    return NULL;
+  }
+
+  for (int y = 0; y < img->height; y++) {
+    for (int x = 0; x < img->width; x++) {
+      ImageSetPixel(mirrored_image, img->width - x - 1, y,
+                    ImageGetPixel(img, x, y));
+    }
+  }
+
+  return mirrored_image;
 }
 
 /// Crop a rectangular subimage from img.
@@ -462,7 +491,18 @@ Image ImageMirror(Image img) { ///
 Image ImageCrop(Image img, int x, int y, int w, int h) { ///
   assert(img != NULL);
   assert(ImageValidRect(img, x, y, w, h));
-  // Insert your code here!
+
+  Image cropped_image = ImageCreate(w, h, img->maxval);
+  if (cropped_image == NULL) {
+    errno = ENOMEM;
+    return NULL;
+  }
+
+  for (int cy = 0; cy < h; cy++) {
+    for (int cx = 0; cx < w; cx++) {
+      ImageSetPixel(cropped_image, cx, cy, ImageGetPixel(img, x + cx, y + cy));
+    }
+  }
 }
 
 /// Operations on two images
@@ -475,6 +515,11 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
+  for (int cy = 0; cy < img2->height; cy++) {
+    for (int cx = 0; cx < img2->width; cx++) {
+      ImageSetPixel(img1, x + cx, y + cy, ImageGetPixel(img2, cx, cy));
+    }
+  }
 }
 
 /// Blend an image into a larger image.
@@ -487,17 +532,38 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
+
+  for (int cy = 0; cy < img2->height; cy++) {
+    for (int cx = 0; cx < img2->width; cx++) {
+      uint8 p1 = ImageGetPixel(img1, x + cx, y + cy);
+      uint8 p2 = ImageGetPixel(img2, cx, cy);
+
+      int new_value = (int)(p1 * (1.0 - alpha) + p2 * alpha);
+      new_value = new_value > img1->maxval ? img1->maxval
+                  : new_value < 0          ? 0
+                                           : new_value;
+
+      ImageSetPixel(img1, x + cx, y + cy, (uint8)new_value);
+    }
+  }
 }
 
 /// Compare an image to a subimage of a larger image.
 /// Returns 1 (true) if img2 matches subimage of img1 at pos (x, y).
 /// Returns 0, otherwise.
-int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
+int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidPos(img1, x, y));
-  // Insert your code here!
+
+  for (int j = 0; j < ImageHeight(img2); j++) {
+    for (int i = 0; i < ImageWidth(img2); i++) {
+      if (ImageGetPixel(img1, x + i, y + j) != ImageGetPixel(img2, i, j)) {
+        return 0;
+      }
+    }
+  }
+  return 1;
 }
 
 /// Locate a subimage inside another image.
@@ -507,7 +573,25 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
 int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
-  // Insert your code here!
+
+  int width1 = ImageWidth(img1);
+  int height1 = ImageHeight(img1);
+  int width2 = ImageWidth(img2);
+  int height2 = ImageHeight(img2);
+
+  // Iterate over each possible starting position in img1
+  for (int y = 0; y <= height1 - height2; y++) {
+    for (int x = 0; x <= width1 - width2; x++) {
+      // Check if img2 matches img1 at (x, y)
+      if (ImageMatchSubImage(img1, x, y, img2)) {
+        *px = x;
+        *py = y;
+        return 1; // Match found
+      }
+    }
+  }
+
+  return 0; // No match found
 }
 
 /// Filtering
