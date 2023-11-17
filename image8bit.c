@@ -392,7 +392,11 @@ void ImageBrighten(Image img, double factor) { ///
 
 /// Rotate an image.
 /// Returns a rotated version of the image.
+<<<<<<< HEAD
 /// The rotation is 90 degrees anti-clockwise.
+=======
+/// The rotation is 90 degrees clockwise.
+>>>>>>> a9a2ac2 (Initial commit)
 /// Ensures: The original img is not modified.
 /// 
 /// On success, a new image is returned.

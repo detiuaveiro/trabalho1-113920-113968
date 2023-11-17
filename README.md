@@ -70,6 +70,7 @@ atualizar repositório base (upstream) deste projeto.
 Se isso acontecer, deverá atualizar o seu repositório com os seguintes comandos:
 
 ```bash
+<<<<<<< HEAD
 # Fazer esta apenas 1 vez:
 git remote add upstream https://github.com/detiuaveiro/image8bit-pub.git
 
@@ -78,6 +79,11 @@ git checkout main
 git merge --allow-unrelated-histories upstream/main
 # (Resolver quaisquer conflitos que surjam...)
 git commit
+=======
+git remote add upstream git@github.com:detiuaveiro/image8bit-pub.git
+git fetch upstream
+git rebase upstream/main
+>>>>>>> a9a2ac2 (Initial commit)
 ```
 
 
