@@ -9,30 +9,23 @@
 // João Manuel Rodrigues <jmr@ua.pt>
 // 2023
 
+#include "error.h"
+#include "image8bit.h"
+#include "instrumentation.h"
 #include <assert.h>
 #include <errno.h>
-<<<<<<< HEAD
-#include "error.h"
-=======
-#include <error.h>
->>>>>>> a9a2ac2 (Initial commit)
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "image8bit.h"
-#include "instrumentation.h"
 
-int main(int argc, char* argv[]) {
-<<<<<<< HEAD
+int main(int argc, char *argv[]) {
   program_name = argv[0];
-=======
->>>>>>> a9a2ac2 (Initial commit)
   if (argc != 3) {
     error(1, 0, "Usage: imageTest input.pgm output.pgm");
   }
 
   ImageInit();
-  
+
   printf("# LOAD image");
   InstrReset(); // to reset instrumentation
   Image img1 = ImageLoad(argv[1]);
@@ -44,14 +37,15 @@ int main(int argc, char* argv[]) {
   // Try changing the behaviour of the program by commenting/uncommenting
   // the appropriate lines.
 
-  //img2 = ImageCrop(img1, ImageWidth(img1)/4, ImageHeight(img1)/4, ImageWidth(img1)/2, ImageHeight(img1)/2);
+  // img2 = ImageCrop(img1, ImageWidth(img1)/4, ImageHeight(img1)/4,
+  // ImageWidth(img1)/2, ImageHeight(img1)/2);
   Image img2 = ImageRotate(img1);
   if (img2 == NULL) {
     error(2, errno, "Rotating img2: %s", ImageErrMsg());
   }
 
-  //ImageNegative(img2);
-  //ImageThreshold(img2, 100);
+  // ImageNegative(img2);
+  // ImageThreshold(img2, 100);
   ImageBrighten(img2, 1.3);
 
   if (ImageSave(img2, argv[2]) == 0) {
@@ -62,4 +56,3 @@ int main(int argc, char* argv[]) {
   ImageDestroy(&img2);
   return 0;
 }
-
