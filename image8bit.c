@@ -624,27 +624,39 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
-void ImageBlur(Image img, int dx, int dy) { ///
+void ImageBlur(Image img, int dx, int dy) {
   assert(img != NULL);
+  int width = img->width;
+  int height = img->height;
 
-  int size = img->width * img->height;
+  // Temporary storage for the new pixel values
+  uint8 newPixels[width * height];
 
-  for (int i = 0; i < size; i++) {
-    int x = i % img->width;
-    int y = i / img->width;
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      int sum = 0;
+      int count = 0;
 
-    int sum = 0;
-    int count = 0;
-
-    for (int cy = y - dy; cy <= y + dy; cy++) {
-      for (int cx = x - dx; cx <= x + dx; cx++) {
-        if (ImageValidPos(img, cx, cy)) {
-          sum += ImageGetPixel(img, cx, cy);
-          count++;
+      // Iterate over the surrounding rectangle
+      for (int cy = y - dy; cy <= y + dy; cy++) {
+        for (int cx = x - dx; cx <= x + dx; cx++) {
+          // Check if the position is within image bounds
+          if (cx >= 0 && cx < width && cy >= 0 && cy < height) {
+            sum += ImageGetPixel(img, cx, cy);
+            count++;
+          }
         }
       }
-    }
 
-    img->pixel[i] = (uint8)(sum / count);
+      // Calculate the mean value
+      newPixels[y * width + x] = sum / count;
+    }
+  }
+
+  // Update the image with the new pixel values
+  for (int i = 0; i < width * height; i++) {
+    int x = i % width;
+    int y = i / width;
+    ImageSetPixel(img, x, y, newPixels[i]);
   }
 }
