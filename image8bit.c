@@ -401,19 +401,12 @@ void ImageThreshold(Image img, uint8 thr) { ///
 /// This will brighten the image if factor>1.0 and
 /// darken the image if factor<1.0.
 void ImageBrighten(Image img, double factor) {
-  assert(img != NULL);
-
   int size = img->width * img->height;
 
   for (int i = 0; i < size; i++) {
-    uint8 *p = &img->pixel[i];
-
-    int new_value = (int)(*p * factor);
-    new_value = new_value > img->maxval ? img->maxval
-                : new_value < 0         ? 0
-                                        : new_value;
-
-    *p = (uint8)new_value;
+    img->pixel[i] = img->pixel[i] * factor > img->maxval
+                        ? img->maxval
+                        : img->pixel[i] * factor;
   }
 }
 
@@ -440,7 +433,6 @@ void ImageBrighten(Image img, double factor) {
 /// On failure, returns NULL and errno/errCause are set accordingly.
 Image ImageRotate(Image img) { ///
   assert(img != NULL);
-  // Insert your code here!
 }
 
 /// Mirror an image = flip left-right.
@@ -483,7 +475,6 @@ void ImagePaste(Image img1, int x, int y, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidRect(img1, x, y, img2->width, img2->height));
-  // Insert your code here!
 }
 
 /// Blend an image into a larger image.
