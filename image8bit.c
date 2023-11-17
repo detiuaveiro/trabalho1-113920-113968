@@ -407,15 +407,13 @@ void ImageThreshold(Image img, uint8 thr) { ///
 void ImageBrighten(Image img, double factor) {
   assert(img != NULL);
 
-  for (int i = 0; i < ImageWidth(img); i++) {
-    for (int j = 0; j < ImageHeight(img); j++) {
-      uint8 pixel = ImageGetPixel(img, i, j);
-      uint8 newPixel = (uint8)(pixel * factor);
-      newPixel = newPixel > img->maxval ? img->maxval
-                 : newPixel < 0         ? 0
-                                        : newPixel;
-      ImageSetPixel(img, i, j, newPixel);
-    }
+  for (int i = 0; i < img->width * img->height; i++) {
+    uint8 *pixel = &img->pixel[i];
+
+    double newPixelValue = *pixel * factor;
+    *pixel = newPixelValue > (double)img->maxval ? img->maxval
+             : newPixelValue < 0.0               ? 0
+                                                 : (uint8)(newPixelValue + 0.5);
   }
 }
 
