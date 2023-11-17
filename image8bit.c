@@ -165,7 +165,23 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert(width >= 0);
   assert(height >= 0);
   assert(0 < maxval && maxval <= PixMax);
-  // Insert your code here!
+
+  Image img = malloc(sizeof(struct image));
+  if (img == NULL) {
+    errno = ENOMEM;
+    errCause = "Out of memory";
+    return NULL; // in case malloc fails
+  }
+  img->width = width;
+  img->height = height;
+  img->maxval = maxval;
+
+  img->pixel = calloc(width * height, sizeof(uint8));
+  if (img->pixel == NULL) {
+    free(img);
+    return NULL;
+  }
+  return img;
 }
 
 /// Destroy the image pointed to by (*imgp).
@@ -175,7 +191,9 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
 /// Should never fail, and should preserve global errno/errCause.
 void ImageDestroy(Image *imgp) { ///
   assert(imgp != NULL);
-  // Insert your code here!
+  free((*imgp)->pixel);
+  free(*imgp);
+  *imgp = NULL;
 }
 
 /// PGM file operations
@@ -291,7 +309,13 @@ int ImageMaxval(Image img) { ///
 /// *max is set to the maximum.
 void ImageStats(Image img, uint8 *min, uint8 *max) { ///
   assert(img != NULL);
-  // Insert your code here!
+  *min = *max = img->pixel[0];
+  for (int i = 0; i < img->width * img->height; i++) {
+    if (img->pixel[i] < *min)
+      *min = img->pixel[i];
+    if (img->pixel[i] > *max)
+      *max = img->pixel[i];
+  }
 }
 
 /// Check if pixel position (x,y) is inside img.
@@ -303,7 +327,7 @@ int ImageValidPos(Image img, int x, int y) { ///
 /// Check if rectangular area (x,y,w,h) is completely inside img.
 int ImageValidRect(Image img, int x, int y, int w, int h) { ///
   assert(img != NULL);
-  // Insert your code here!
+  return (0 <= x && x + w <= img->width) && (0 <= y && y + h <= img->height);
 }
 
 /// Pixel get & set operations
@@ -351,7 +375,12 @@ void ImageSetPixel(Image img, int x, int y, uint8 level) { ///
 /// resulting in a "photographic negative" effect.
 void ImageNegative(Image img) { ///
   assert(img != NULL);
-  // Insert your code here!
+
+  int size = img->width * img->height;
+
+  for (int i = 0; i < size; i++) {
+    img->pixel[i] = img->maxval - img->pixel[i];
+  }
 }
 
 /// Apply threshold to image.
@@ -359,17 +388,33 @@ void ImageNegative(Image img) { ///
 /// all pixels with level>=thr to white (maxval).
 void ImageThreshold(Image img, uint8 thr) { ///
   assert(img != NULL);
-  // Insert your code here!
+
+  int size = img->width * img->height;
+
+  for (int i = 0; i < size; i++) {
+    img->pixel[i] = img->pixel[i] < thr ? 0 : img->maxval;
+  }
 }
 
 /// Brighten image by a factor.
 /// Multiply each pixel level by a factor, but saturate at maxval.
 /// This will brighten the image if factor>1.0 and
 /// darken the image if factor<1.0.
-void ImageBrighten(Image img, double factor) { ///
+void ImageBrighten(Image img, double factor) {
   assert(img != NULL);
-  // ? assert (factor >= 0.0);
-  // Insert your code here!
+
+  int size = img->width * img->height;
+
+  for (int i = 0; i < size; i++) {
+    uint8 *p = &img->pixel[i];
+
+    int new_value = (int)(*p * factor);
+    new_value = new_value > img->maxval ? img->maxval
+                : new_value < 0         ? 0
+                                        : new_value;
+
+    *p = (uint8)new_value;
+  }
 }
 
 /// Geometric transformations
@@ -481,5 +526,9 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
 void ImageBlur(Image img, int dx, int dy) { ///
-  // Insert your code here!
+  assert(img != NULL);
+
+  int size = img->width * img->height;
+
+  // remember the smart way to do this
 }
