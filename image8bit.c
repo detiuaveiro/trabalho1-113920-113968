@@ -545,18 +545,19 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
 /// Compare an image to a subimage of a larger image.
 /// Returns 1 (true) if img2 matches subimage of img1 at pos (x, y).
 /// Returns 0, otherwise.
-int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
+int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
   assert(img1 != NULL);
   assert(img2 != NULL);
   assert(ImageValidPos(img1, x, y));
 
-  for (int i = 0; i < img2->width; i++) {
-    for (int j = 0; j < img2->height; j++) {
+  for (int j = 0; j < ImageHeight(img2); j++) {
+    for (int i = 0; i < ImageWidth(img2); i++) {
       if (ImageGetPixel(img1, x + i, y + j) != ImageGetPixel(img2, i, j)) {
         return 0;
       }
     }
   }
+  return 1;
 }
 
 /// Locate a subimage inside another image.
@@ -566,7 +567,9 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
 int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
-  // Insert your code here!
+
+  int img2_width = img2->width;
+  int img1_width = img1->width;
 }
 
 /// Filtering
