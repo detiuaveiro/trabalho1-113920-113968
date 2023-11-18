@@ -634,23 +634,20 @@ void ImageBlur(Image img, int dx, int dy) {
   uint8 newPixels[width * height];
   int cumSum[width * height];
 
-  int *lastRowSum = malloc(width * sizeof(int));
-
+  // Compute the cumulative sum of the image
   for (int i = 0; i < width * height; i++) {
     int x = i % width;
     int y = i / width;
-    int pixelValue = ImageGetPixel(img, x, y);
+    int pixelValue = img->pixel[i];
 
-    // Compute the cumulative sum at this point
-    int leftSum = (x > 0) ? cumSum[y * width + (x - 1)] : 0;
-    int aboveSum = (y > 0) ? lastRowSum[x] : 0;
-    int diagonalSum = (x > 0 && y > 0) ? lastRowSum[x - 1] : 0;
-
-    int sum = pixelValue + leftSum + aboveSum - diagonalSum;
-    cumSum[y * width + x] = sum;
-
-    // Update the last row sum cache
-    lastRowSum[x] = sum;
+    int sum = pixelValue;
+    if (x > 0)
+      sum += cumSum[y * width + (x - 1)]; // Add left
+    if (y > 0)
+      sum += cumSum[(y - 1) * width + x]; // Add above
+    if (x > 0 && y > 0)
+      sum -= cumSum[(y - 1) * width + (x - 1)]; // Subtract diagonal
+    cumSum[i] = sum;
   }
 
   // Apply the blur using the cumulative sum
@@ -682,5 +679,4 @@ void ImageBlur(Image img, int dx, int dy) {
   for (int i = 0; i < width * height; i++) {
     ImageSetPixel(img, i % width, i / width, newPixels[i]);
   }
-  free(lastRowSum);
 }
