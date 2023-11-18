@@ -624,35 +624,53 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// Each pixel is substituted by the mean of the pixels in the rectangle
 /// [x-dx, x+dx]x[y-dy, y+dy].
 /// The image is changed in-place.
+
 void ImageBlur(Image img, int dx, int dy) {
   assert(img != NULL);
   int width = img->width;
   int height = img->height;
 
+  // Temporary storage for the new pixel values and the cumulative sum
   uint8 newPixels[width * height];
+  int cumSum[width * height];
 
+  // Compute the cumulative sum of the image
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
-      int sum = 0;
-      int count = 0;
-
-      for (int cy = y - dy; cy <= y + dy; cy++) {
-        for (int cx = x - dx; cx <= x + dx; cx++) {
-          // Check if the position is within image bounds
-          if (cx >= 0 && cx < width && cy >= 0 && cy < height) {
-            sum += ImageGetPixel(img, cx, cy);
-            count++;
-          }
-        }
-      }
-      double meanValue = (double)sum / count;
-      newPixels[y * width + x] =
-          (uint8)(meanValue + 0.5); // Add 0.5 for rounding
+      int pixelValue = ImageGetPixel(img, x, y);
+      cumSum[y * width + x] =
+          pixelValue + ((x > 0) ? cumSum[y * width + (x - 1)] : 0) +
+          ((y > 0) ? cumSum[(y - 1) * width + x] : 0) -
+          ((x > 0 && y > 0) ? cumSum[(y - 1) * width + (x - 1)] : 0);
     }
   }
+
+  // Apply the blur using the cumulative sum
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      // Define the rectangle for the blur kernel
+      int left = (x > dx) ? x - dx : 0;
+      int right = (x + dx < width) ? x + dx : width - 1;
+      int top = (y > dy) ? y - dy : 0;
+      int bottom = (y + dy < height) ? y + dy : height - 1;
+
+      // Calculate sum using the cumulative sum array
+      int sum = cumSum[bottom * width + right];
+      if (left > 0)
+        sum -= cumSum[bottom * width + (left - 1)];
+      if (top > 0)
+        sum -= cumSum[(top - 1) * width + right];
+      if (left > 0 && top > 0)
+        sum += cumSum[(top - 1) * width + (left - 1)];
+
+      // Count the number of pixels in the kernel and calculate the average
+      int kernelArea = (right - left + 1) * (bottom - top + 1);
+      newPixels[y * width + x] = (uint8)(sum / kernelArea);
+    }
+  }
+
+  // Update the image with the new pixel values
   for (int i = 0; i < width * height; i++) {
-    int x = i % width;
-    int y = i / width;
-    ImageSetPixel(img, x, y, newPixels[i]);
+    ImageSetPixel(img, i % width, i / width, newPixels[i]);
   }
 }
