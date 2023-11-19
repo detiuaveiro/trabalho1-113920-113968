@@ -651,28 +651,29 @@ void ImageBlur(Image img, int dx, int dy) {
   }
 
   // Apply the blur using the cumulative sum
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      // Define the rectangle for the blur kernel
-      int left = (x > dx) ? x - dx : 0;
-      int right = (x + dx < width) ? x + dx : width - 1;
-      int top = (y > dy) ? y - dy : 0;
-      int bottom = (y + dy < height) ? y + dy : height - 1;
+  for (int i = 0; i < width * height; i++) {
+    int x = i % width;
+    int y = i / width;
 
-      // Calculate sum using the cumulative sum array
-      int sum = cumSum[bottom * width + right];
-      if (left > 0)
-        sum -= cumSum[bottom * width + (left - 1)];
-      if (top > 0)
-        sum -= cumSum[(top - 1) * width + right];
-      if (left > 0 && top > 0)
-        sum += cumSum[(top - 1) * width + (left - 1)];
+    // Define the rectangle for the blur kernel
+    int left = (x > dx) ? x - dx : 0;
+    int right = (x + dx < width) ? x + dx : width - 1;
+    int top = (y > dy) ? y - dy : 0;
+    int bottom = (y + dy < height) ? y + dy : height - 1;
 
-      // Count the number of pixels in the kernel and calculate the average with
-      // improved rounding
-      int kernelArea = (right - left + 1) * (bottom - top + 1);
-      newPixels[y * width + x] = (uint8)((sum + kernelArea / 2) / kernelArea);
-    }
+    // Calculate sum using the cumulative sum array
+    int sum = cumSum[bottom * width + right];
+    if (left > 0)
+      sum -= cumSum[bottom * width + (left - 1)];
+    if (top > 0)
+      sum -= cumSum[(top - 1) * width + right];
+    if (left > 0 && top > 0)
+      sum += cumSum[(top - 1) * width + (left - 1)];
+
+    // Count the number of pixels in the kernel and calculate the average with
+    // improved rounding
+    int kernelArea = (right - left + 1) * (bottom - top + 1);
+    newPixels[i] = (uint8)((sum + kernelArea / 2) / kernelArea);
   }
 
   // Update the image with the new pixel values
