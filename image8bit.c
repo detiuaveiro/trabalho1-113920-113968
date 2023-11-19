@@ -626,48 +626,45 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// The image is changed in-place.
 
 void ImageBlur(Image img, int dx, int dy) {
-  assert(img != NULL);
   int width = img->width;
   int height = img->height;
+  int cumSum[width * height]; // Extend the cumulative sum array for extra rows
 
-  int cumSum[width * height];
-  int size = width * height;
-
-  for (int i = 0; i < size; i++) {
-    int x = i % width;
-    int y = i / width;
-    int pixelValue = img->pixel[i];
-
-    int sum = pixelValue;
-    if (x > 0)
-      sum += cumSum[y * width + (x - 1)];
-    if (y > 0)
-      sum += cumSum[(y - 1) * width + x];
-    if (x > 0 && y > 0)
-      sum -= cumSum[(y - 1) * width + (x - 1)];
-    cumSum[i] = sum;
-  }
-
-  for (int i = 0; i < width * height; i++) {
+  // Iterate over the image, extended by dy rows
+  for (int i = 0; i < width * (height + dy); i++) {
     int x = i % width;
     int y = i / width;
 
-    int left = (x > dx) ? x - dx : 0;
-    int right = (x + dx < width) ? x + dx : width - 1;
-    int top = (y > dy) ? y - dy : 0;
-    int bottom = (y + dy < height) ? y + dy : height - 1;
+    if (y < height) {
+      int pixelValue = ImageGetPixel(img, x, y);
+      int sum = pixelValue;
+      if (x > 0)
+        sum += cumSum[i - 1];
+      if (y > 0)
+        sum += cumSum[i - width];
+      if (x > 0 && y > 0)
+        sum -= cumSum[i - width - 1];
+      cumSum[i] = sum;
+    }
 
-    int sum = cumSum[bottom * width + right];
-    if (left > 0)
-      sum -= cumSum[bottom * width + (left - 1)];
-    if (top > 0)
-      sum -= cumSum[(top - 1) * width + right];
-    if (left > 0 && top > 0)
-      sum += cumSum[(top - 1) * width + (left - 1)];
+    if (y >= dy) {
+      int left = (x > dx) ? x - dx : 0;
+      int right = (x + dx < width) ? x + dx : width - 1;
+      int top = y - dy;
+      int bottom = (y + dy < height) ? y + dy : height - 1;
 
-    int kernelArea = (right - left + 1) * (bottom - top + 1);
-    uint8 blurredPixel = (uint8)((sum + kernelArea / 2) / kernelArea);
+      int sum = cumSum[bottom * width + right];
+      if (left > 0)
+        sum -= cumSum[bottom * width + (left - 1)];
+      if (top > 0)
+        sum -= cumSum[(top - 1) * width + right];
+      if (left > 0 && top > 0)
+        sum += cumSum[(top - 1) * width + (left - 1)];
 
-    img->pixel[i] = blurredPixel;
+      int kernelArea = (right - left + 1) * (bottom - top + 1);
+      uint8 blurredPixel = (uint8)((sum + kernelArea / 2) / kernelArea);
+
+      ImageSetPixel(img, x, y, blurredPixel);
+    }
   }
 }
