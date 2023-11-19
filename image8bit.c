@@ -668,6 +668,6 @@ void ImageBlur(Image img, int dx, int dy) {
     int kernelArea = (right - left + 1) * (bottom - top + 1);
     uint8 blurredPixel = (uint8)((sum + kernelArea / 2) / kernelArea);
 
-    ImageSetPixel(img, x, y, blurredPixel);
+    img->pixel[i] = blurredPixel;
   }
 }
