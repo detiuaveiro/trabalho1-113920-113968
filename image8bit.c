@@ -581,11 +581,16 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
   assert(img2 != NULL);
   assert(ImageValidPos(img1, x, y));
 
-  for (int j = 0; j < ImageHeight(img2); j++) {
-    for (int i = 0; i < ImageWidth(img2); i++) {
-      if (ImageGetPixel(img1, x + i, y + j) != ImageGetPixel(img2, i, j)) {
-        return 0;
-      }
+  int width = ImageWidth(img2);
+  int height = ImageHeight(img2);
+  int size = width * height;
+
+  for (int i = 0; i < size; i++) {
+    int cx = i % width;
+    int cy = i / width;
+
+    if (ImageGetPixel(img1, x + cx, y + cy) != ImageGetPixel(img2, cx, cy)) {
+      return 0;
     }
   }
   return 1;
@@ -601,18 +606,16 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 
   int width1 = ImageWidth(img1);
   int height1 = ImageHeight(img1);
-  int width2 = ImageWidth(img2);
-  int height2 = ImageHeight(img2);
+  int size1 = width1 * height1;
 
-  // Iterate over each possible starting position in img1
-  for (int y = 0; y <= height1 - height2; y++) {
-    for (int x = 0; x <= width1 - width2; x++) {
-      // Check if img2 matches img1 at (x, y)
-      if (ImageMatchSubImage(img1, x, y, img2)) {
-        *px = x;
-        *py = y;
-        return 1; // Match found
-      }
+  for (int i = 0; i < size1; i++) {
+    int cx = i % width1;
+    int cy = i / width1;
+
+    if (ImageMatchSubImage(img1, cx, cy, img2)) {
+      *px = cx;
+      *py = cy;
+      return 1;
     }
   }
 
@@ -631,14 +634,13 @@ void ImageBlur(Image img, int dx, int dy) {
   int width = img->width;
   int height = img->height;
   int size = width * height;
-  int cumSum[size];                  // Cumulative sum array
-  memset(cumSum, 0, sizeof(cumSum)); // Initialize cumSum to zeros
+  int cumSum[size];
+  memset(cumSum, 0, sizeof(cumSum));
 
   for (int i = 0; i < size + width * (dy + 1); i++) {
     int x = i % width;
     int y = i / width;
 
-    // Calculate cumulative sum within image bounds
     if (i < size) {
       int pixelValue = img->pixel[i];
       int sum = pixelValue;
@@ -651,35 +653,28 @@ void ImageBlur(Image img, int dx, int dy) {
       cumSum[i] = sum;
     }
 
-    // Apply blur when sufficient rows have been processed
     if (i >= width * (dy + 1)) {
-      // Calculate blur index based on current index and dy offset
       int blur_index = i - width * (dy + 1);
 
-      if (blur_index <= size) { // Check to be within image bounds
-        int bx = blur_index % width;
-        int by = blur_index / width;
-        int left = (bx > dx) ? bx - dx : 0;
-        int right = (bx + dx < width) ? bx + dx : width - 1;
-        int top = (by > dy) ? by - dy : 0;
-        int bottom = (by + dy < height) ? by + dy : height - 1;
+      int bx = blur_index % width;
+      int by = blur_index / width;
+      int left = (bx > dx) ? bx - dx : 0;
+      int right = (bx + dx < width) ? bx + dx : width - 1;
+      int top = (by > dy) ? by - dy : 0;
+      int bottom = (by + dy < height) ? by + dy : height - 1;
 
-        // Calculate sum for blur using the cumulative sum array
-        int _sum = cumSum[bottom * width + right];
-        if (left > 0)
-          _sum -= cumSum[bottom * width + (left - 1)];
-        if (top > 0)
-          _sum -= cumSum[(top - 1) * width + right];
-        if (left > 0 && top > 0)
-          _sum += cumSum[(top - 1) * width + (left - 1)];
+      int _sum = cumSum[bottom * width + right];
+      if (left > 0)
+        _sum -= cumSum[bottom * width + (left - 1)];
+      if (top > 0)
+        _sum -= cumSum[(top - 1) * width + right];
+      if (left > 0 && top > 0)
+        _sum += cumSum[(top - 1) * width + (left - 1)];
 
-        // Calculate the average and apply the blur
-        int kernelArea = (right - left + 1) * (bottom - top + 1);
-        uint8 blurredPixel = (uint8)((_sum + kernelArea / 2) / kernelArea);
+      int kernelArea = (right - left + 1) * (bottom - top + 1);
+      uint8 blurredPixel = (uint8)((_sum + kernelArea / 2) / kernelArea);
 
-        // Update the image with the blurred pixel
-        img->pixel[blur_index] = blurredPixel;
-      }
+      img->pixel[blur_index] = blurredPixel;
     }
   }
 }

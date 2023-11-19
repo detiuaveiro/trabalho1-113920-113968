@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
   // ImageNegative(img2);
   // ImageThreshold(img2, 100);
   // ImageBrighten(img2, 1.3);
-  ImageBlur(img1, 40, 40);
+  ImageBlur(img1, 18, 18);
 
   if (ImageSave(img1, argv[2]) == 0) {
     error(2, errno, "%s: %s", argv[2], ImageErrMsg());
