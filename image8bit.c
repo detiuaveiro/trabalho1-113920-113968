@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // The data structure
 //
@@ -626,17 +627,20 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 /// The image is changed in-place.
 
 void ImageBlur(Image img, int dx, int dy) {
+  assert(img != NULL);
   int width = img->width;
   int height = img->height;
-  int cumSum[width * height]; // Extend the cumulative sum array for extra rows
+  int size = width * height;
+  int cumSum[size];                  // Cumulative sum array
+  memset(cumSum, 0, sizeof(cumSum)); // Initialize cumSum to zeros
 
-  // Iterate over the image, extended by dy rows
-  for (int i = 0; i < width * (height + dy); i++) {
+  for (int i = 0; i < size + width * (dy + 1); i++) {
     int x = i % width;
     int y = i / width;
 
-    if (y < height) {
-      int pixelValue = ImageGetPixel(img, x, y);
+    // Calculate cumulative sum within image bounds
+    if (i < size) {
+      int pixelValue = img->pixel[i];
       int sum = pixelValue;
       if (x > 0)
         sum += cumSum[i - 1];
@@ -647,24 +651,35 @@ void ImageBlur(Image img, int dx, int dy) {
       cumSum[i] = sum;
     }
 
-    if (y >= dy) {
-      int left = (x > dx) ? x - dx : 0;
-      int right = (x + dx < width) ? x + dx : width - 1;
-      int top = y - dy;
-      int bottom = (y + dy < height) ? y + dy : height - 1;
+    // Apply blur when sufficient rows have been processed
+    if (i >= width * (dy + 1)) {
+      // Calculate blur index based on current index and dy offset
+      int blur_index = i - width * (dy + 1);
 
-      int sum = cumSum[bottom * width + right];
-      if (left > 0)
-        sum -= cumSum[bottom * width + (left - 1)];
-      if (top > 0)
-        sum -= cumSum[(top - 1) * width + right];
-      if (left > 0 && top > 0)
-        sum += cumSum[(top - 1) * width + (left - 1)];
+      if (blur_index <= size) { // Check to be within image bounds
+        int bx = blur_index % width;
+        int by = blur_index / width;
+        int left = (bx > dx) ? bx - dx : 0;
+        int right = (bx + dx < width) ? bx + dx : width - 1;
+        int top = (by > dy) ? by - dy : 0;
+        int bottom = (by + dy < height) ? by + dy : height - 1;
 
-      int kernelArea = (right - left + 1) * (bottom - top + 1);
-      uint8 blurredPixel = (uint8)((sum + kernelArea / 2) / kernelArea);
+        // Calculate sum for blur using the cumulative sum array
+        int _sum = cumSum[bottom * width + right];
+        if (left > 0)
+          _sum -= cumSum[bottom * width + (left - 1)];
+        if (top > 0)
+          _sum -= cumSum[(top - 1) * width + right];
+        if (left > 0 && top > 0)
+          _sum += cumSum[(top - 1) * width + (left - 1)];
 
-      ImageSetPixel(img, x, y, blurredPixel);
+        // Calculate the average and apply the blur
+        int kernelArea = (right - left + 1) * (bottom - top + 1);
+        uint8 blurredPixel = (uint8)((_sum + kernelArea / 2) / kernelArea);
+
+        // Update the image with the blurred pixel
+        img->pixel[blur_index] = blurredPixel;
+      }
     }
   }
 }
