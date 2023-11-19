@@ -32,7 +32,6 @@ int main(int argc, char *argv[]) {
   if (img1 == NULL) {
     error(2, errno, "Loading %s: %s", argv[1], ImageErrMsg());
   }
-  InstrPrint(); // to print instrumentation
 
   // Try changing the behaviour of the program by commenting/uncommenting
   // the appropriate lines.
@@ -44,7 +43,7 @@ int main(int argc, char *argv[]) {
   // ImageThreshold(img2, 100);
   // ImageBrighten(img2, 1.3);
   ImageBlur(img1, 18, 18);
-
+  InstrPrint(); // to print instrumentation
   if (ImageSave(img1, argv[2]) == 0) {
     error(2, errno, "%s: %s", argv[2], ImageErrMsg());
   }

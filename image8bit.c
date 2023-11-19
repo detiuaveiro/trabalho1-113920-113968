@@ -144,10 +144,13 @@ void ImageInit(void) { ///
   InstrCalibrate();
   InstrName[0] = "pixmem"; // InstrCount[0] will count pixel array acesses
   // Name other counters here...
+  InstrName[1] = "Peepeepoopoo";
 }
 
 // Macros to simplify accessing instrumentation counters:
 #define PIXMEM InstrCount[0]
+#define Peepeepoopoo InstrCount[1]
+
 // Add more macros here...
 
 // TIP: Search for PIXMEM or InstrCount to see where it is incremented!
@@ -631,18 +634,19 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 
 void ImageBlur(Image img, int dx, int dy) {
   assert(img != NULL);
-  int width = img->width;
-  int height = img->height;
+  int width = ImageWidth(img);
+  int height = ImageHeight(img);
   int size = width * height;
   int cumSum[size];
   memset(cumSum, 0, sizeof(cumSum));
 
   for (int i = 0; i < size + width * (dy + 1); i++) {
+    Peepeepoopoo += 1;
     int x = i % width;
     int y = i / width;
 
     if (i < size) {
-      int pixelValue = img->pixel[i];
+      int pixelValue = ImageGetPixel(img, x, y);
       int sum = pixelValue;
       if (x > 0)
         sum += cumSum[i - 1];
@@ -674,7 +678,7 @@ void ImageBlur(Image img, int dx, int dy) {
       int kernelArea = (right - left + 1) * (bottom - top + 1);
       uint8 blurredPixel = (uint8)((_sum + kernelArea / 2) / kernelArea);
 
-      img->pixel[blur_index] = blurredPixel;
+      ImageSetPixel(img, bx, by, blurredPixel);
     }
   }
 }
