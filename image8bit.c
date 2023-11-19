@@ -630,38 +630,33 @@ void ImageBlur(Image img, int dx, int dy) {
   int width = img->width;
   int height = img->height;
 
-  // Temporary storage for the new pixel values and the cumulative sum
-  uint8 newPixels[width * height];
   int cumSum[width * height];
+  int size = width * height;
 
-  // Compute the cumulative sum of the image
-  for (int i = 0; i < width * height; i++) {
+  for (int i = 0; i < size; i++) {
     int x = i % width;
     int y = i / width;
     int pixelValue = img->pixel[i];
 
     int sum = pixelValue;
     if (x > 0)
-      sum += cumSum[y * width + (x - 1)]; // Add left
+      sum += cumSum[y * width + (x - 1)];
     if (y > 0)
-      sum += cumSum[(y - 1) * width + x]; // Add above
+      sum += cumSum[(y - 1) * width + x];
     if (x > 0 && y > 0)
-      sum -= cumSum[(y - 1) * width + (x - 1)]; // Subtract diagonal
+      sum -= cumSum[(y - 1) * width + (x - 1)];
     cumSum[i] = sum;
   }
 
-  // Apply the blur using the cumulative sum
   for (int i = 0; i < width * height; i++) {
     int x = i % width;
     int y = i / width;
 
-    // Define the rectangle for the blur kernel
     int left = (x > dx) ? x - dx : 0;
     int right = (x + dx < width) ? x + dx : width - 1;
     int top = (y > dy) ? y - dy : 0;
     int bottom = (y + dy < height) ? y + dy : height - 1;
 
-    // Calculate sum using the cumulative sum array
     int sum = cumSum[bottom * width + right];
     if (left > 0)
       sum -= cumSum[bottom * width + (left - 1)];
@@ -670,14 +665,9 @@ void ImageBlur(Image img, int dx, int dy) {
     if (left > 0 && top > 0)
       sum += cumSum[(top - 1) * width + (left - 1)];
 
-    // Count the number of pixels in the kernel and calculate the average with
-    // improved rounding
     int kernelArea = (right - left + 1) * (bottom - top + 1);
-    newPixels[i] = (uint8)((sum + kernelArea / 2) / kernelArea);
-  }
+    uint8 blurredPixel = (uint8)((sum + kernelArea / 2) / kernelArea);
 
-  // Update the image with the new pixel values
-  for (int i = 0; i < width * height; i++) {
-    ImageSetPixel(img, i % width, i / width, newPixels[i]);
+    ImageSetPixel(img, x, y, blurredPixel);
   }
 }
