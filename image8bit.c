@@ -144,12 +144,12 @@ void ImageInit(void) { ///
   InstrCalibrate();
   InstrName[0] = "pixmem"; // InstrCount[0] will count pixel array acesses
   // Name other counters here...
-  InstrName[1] = "Peepeepoopoo";
+  InstrName[1] = "blur_its";
 }
 
 // Macros to simplify accessing instrumentation counters:
 #define PIXMEM InstrCount[0]
-#define Peepeepoopoo InstrCount[1]
+#define BLUR_ITS InstrCount[1]
 
 // Add more macros here...
 
@@ -641,7 +641,7 @@ void ImageBlur(Image img, int dx, int dy) {
   memset(cumSum, 0, sizeof(cumSum));
 
   for (int i = 0; i < size + width * (dy + 1); i++) {
-    Peepeepoopoo += 1;
+    BLUR_ITS += 1;
     int x = i % width;
     int y = i / width;
 
