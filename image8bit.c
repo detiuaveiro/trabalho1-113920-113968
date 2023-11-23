@@ -11,11 +11,11 @@
 
 // Student authors (fill in below):
 // NMec:  Name:
-//
-//
+// 113920 João Manuel Vieria Roldão
+// 113968 Guilherme de Almeida Militão Rosa
 //
 // Date:
-//
+// 15/11/2023
 
 #include "image8bit.h"
 
