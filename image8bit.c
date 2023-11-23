@@ -637,8 +637,7 @@ void ImageBlur(Image img, int dx, int dy) {
   int width = ImageWidth(img);
   int height = ImageHeight(img);
   int size = width * height;
-  int cumSum[size];
-  memset(cumSum, 0, sizeof(cumSum));
+  int *cumsum = malloc(sizeof(int) * size);
 
   for (int i = 0; i < size + width * (dy + 1); i++) {
     BLUR_ITS += 1;
@@ -649,12 +648,12 @@ void ImageBlur(Image img, int dx, int dy) {
       int pixelValue = ImageGetPixel(img, x, y);
       int sum = pixelValue;
       if (x > 0)
-        sum += cumSum[i - 1];
+        sum += *(cumsum + i - 1);
       if (y > 0)
-        sum += cumSum[i - width];
+        sum += *(cumsum + i - width);
       if (x > 0 && y > 0)
-        sum -= cumSum[i - width - 1];
-      cumSum[i] = sum;
+        sum -= *(cumsum + i - width - 1);
+      *(cumsum + i) = sum;
     }
 
     if (i >= width * (dy + 1)) {
@@ -667,18 +666,18 @@ void ImageBlur(Image img, int dx, int dy) {
       int top = (by > dy) ? by - dy : 0;
       int bottom = (by + dy < height) ? by + dy : height - 1;
 
-      int _sum = cumSum[bottom * width + right];
+      int _sum = *(cumsum + bottom * width + right);
       if (left > 0)
-        _sum -= cumSum[bottom * width + (left - 1)];
+        _sum -= *(cumsum + (bottom * width + (left - 1)));
       if (top > 0)
-        _sum -= cumSum[(top - 1) * width + right];
+        _sum -= *(cumsum + ((top - 1) * width + right));
       if (left > 0 && top > 0)
-        _sum += cumSum[(top - 1) * width + (left - 1)];
-
+        _sum += *(cumsum + ((top - 1) * width + (left - 1)));
       int kernelArea = (right - left + 1) * (bottom - top + 1);
       uint8 blurredPixel = (uint8)((_sum + kernelArea / 2) / kernelArea);
 
       ImageSetPixel(img, bx, by, blurredPixel);
     }
   }
+  free(cumsum);
 }
