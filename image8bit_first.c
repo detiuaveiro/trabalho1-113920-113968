@@ -639,6 +639,7 @@ void ImageBlur(Image img, int dx, int dy) {
       for (int cy = y - dy; cy <= y + dy; cy++) {
         for (int cx = x - dx; cx <= x + dx; cx++) {
           // Check if the position is within image bounds
+          BLUR_ITS += 1;
           if (cx >= 0 && cx < width && cy >= 0 && cy < height) {
             sum += ImageGetPixel(img, cx, cy);
             count++;
@@ -651,6 +652,7 @@ void ImageBlur(Image img, int dx, int dy) {
     }
   }
   for (int i = 0; i < width * height; i++) {
+    BLUR_ITS += 1;
     int x = i % width;
     int y = i / width;
     ImageSetPixel(img, x, y, newPixels[i]);

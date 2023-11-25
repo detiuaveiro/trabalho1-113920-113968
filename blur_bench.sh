@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the CSV file name
-CSV_FILE="test_results.csv"
+CSV_FILE="test_results_second.csv"
 
 # Clear the CSV file if it exists (optional)
 rm -f "$CSV_FILE"

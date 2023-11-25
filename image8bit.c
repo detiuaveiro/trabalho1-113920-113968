@@ -634,50 +634,48 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
 
 void ImageBlur(Image img, int dx, int dy) {
   assert(img != NULL);
-  int width = ImageWidth(img);
-  int height = ImageHeight(img);
+  int width = img->width;
+  int height = img->height;
+
   int size = width * height;
   int *cumsum = malloc(sizeof(int) * size);
 
-  for (int i = 0; i < size + width * (dy + 1); i++) {
-    BLUR_ITS += 1;
+  for (int i = 0; i < size; i++) {
+    int x = i % width;
+    int y = i / width;
+    int pixelValue = img->pixel[i];
+
+    int sum = pixelValue;
+    if (x > 0)
+      sum += *(cumsum + y * width + (x - 1));
+    if (y > 0)
+      sum += *(cumsum + (y - 1) * width + x);
+    if (x > 0 && y > 0)
+      sum -= *(cumsum + (y - 1) * width + (x - 1));
+    *(cumsum + i) = sum;
+    BLUR_ITS++;
+  }
+
+  for (int i = 0; i < width * height; i++) {
     int x = i % width;
     int y = i / width;
 
-    if (i < size) {
-      int pixelValue = ImageGetPixel(img, x, y);
-      int sum = pixelValue;
-      if (x > 0)
-        sum += *(cumsum + i - 1);
-      if (y > 0)
-        sum += *(cumsum + i - width);
-      if (x > 0 && y > 0)
-        sum -= *(cumsum + i - width - 1);
-      *(cumsum + i) = sum;
-    }
+    int left = (x > dx) ? x - dx : 0;
+    int right = (x + dx < width) ? x + dx : width - 1;
+    int top = (y > dy) ? y - dy : 0;
+    int bottom = (y + dy < height) ? y + dy : height - 1;
 
-    if (i >= width * (dy + 1)) {
-      int blur_index = i - width * (dy + 1);
+    int sum = cumSum[bottom * width + right];
+    if (left > 0)
+      sum -= cumSum[bottom * width + (left - 1)];
+    if (top > 0)
+      sum -= cumSum[(top - 1) * width + right];
+    if (left > 0 && top > 0)
+      sum += cumSum[(top - 1) * width + (left - 1)];
 
-      int bx = blur_index % width;
-      int by = blur_index / width;
-      int left = (bx > dx) ? bx - dx : 0;
-      int right = (bx + dx < width) ? bx + dx : width - 1;
-      int top = (by > dy) ? by - dy : 0;
-      int bottom = (by + dy < height) ? by + dy : height - 1;
-
-      int _sum = *(cumsum + bottom * width + right);
-      if (left > 0)
-        _sum -= *(cumsum + (bottom * width + (left - 1)));
-      if (top > 0)
-        _sum -= *(cumsum + ((top - 1) * width + right));
-      if (left > 0 && top > 0)
-        _sum += *(cumsum + ((top - 1) * width + (left - 1)));
-      int kernelArea = (right - left + 1) * (bottom - top + 1);
-      uint8 blurredPixel = (uint8)((_sum + kernelArea / 2) / kernelArea);
-
-      ImageSetPixel(img, bx, by, blurredPixel);
-    }
+    int kernelArea = (right - left + 1) * (bottom - top + 1);
+    uint8 blurredPixel = (uint8)((sum + kernelArea / 2) / kernelArea);
+    BLUR_ITS++;
+    img->pixel[i] = blurredPixel;
   }
-  free(cumsum);
 }
