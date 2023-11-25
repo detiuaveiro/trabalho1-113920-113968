@@ -665,13 +665,13 @@ void ImageBlur(Image img, int dx, int dy) {
     int top = (y > dy) ? y - dy : 0;
     int bottom = (y + dy < height) ? y + dy : height - 1;
 
-    int sum = cumSum[bottom * width + right];
+    int sum = cumsum[bottom * width + right];
     if (left > 0)
-      sum -= cumSum[bottom * width + (left - 1)];
+      sum -= cumsum[bottom * width + (left - 1)];
     if (top > 0)
-      sum -= cumSum[(top - 1) * width + right];
+      sum -= cumsum[(top - 1) * width + right];
     if (left > 0 && top > 0)
-      sum += cumSum[(top - 1) * width + (left - 1)];
+      sum += cumsum[(top - 1) * width + (left - 1)];
 
     int kernelArea = (right - left + 1) * (bottom - top + 1);
     uint8 blurredPixel = (uint8)((sum + kernelArea / 2) / kernelArea);
