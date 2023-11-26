@@ -28,25 +28,39 @@ fitLineOpt = polyval(coefficients_opt, image_size_opt);
 coefficients_unopt = polyfit(image_size_unopt, iterations_unopt, 1);
 fitLineUnopt = polyval(coefficients_unopt, image_size_unopt);
 
-% Plot the data
+% Plot the data with log scale
 figure;
-plot(image_size_opt, iterations_opt, 'o', 'MarkerSize', 8, 'MarkerFaceColor', 'blue'); % Data points for the optimized version
+semilogy(image_size_opt, iterations_opt, 'o', 'MarkerSize', 8, 'MarkerFaceColor', 'blue'); % Data points for the optimized version
 hold on;
-plot(image_size_unopt, iterations_unopt, 'o', 'MarkerSize', 8, 'MarkerFaceColor', 'red'); % Data points for the unoptimized version
+semilogy(image_size_unopt, iterations_unopt, 'o', 'MarkerSize', 8, 'MarkerFaceColor', 'red'); % Data points for the unoptimized version
 
 % Plotting the lines of best fit
-plot(image_size_opt, fitLineOpt, '-b'); % Line for the optimized version
-plot(image_size_unopt, fitLineUnopt, '-r'); % Line for the unoptimized version
+semilogy(image_size_opt, fitLineOpt, '-b'); % Line for the optimized version
+semilogy(image_size_unopt, fitLineUnopt, '-r'); % Line for the unoptimized version
 
 % Adding labels, legend, and title
 xlabel('Image Size (pixels)');
-ylabel('Number of Iterations');
+ylabel('Number of Iterations (log scale)');
 legend('Optimized Version', 'Line of Best Fit - Opt', 'Unoptimized Version', 'Line of Best Fit - Unopt', 'Location', 'best');
 title('Complexity Analysis: Optimized vs. Unoptimized');
-hold on;
+hold off;
 
-
-
-% Ensure the aspect ratio is equal for X and Y axes to make the line diagonal
+% Ensure the aspect ratio is equal for X and Y axes
 axis square;
-grid on
+grid on;
+
+% Create a new figure for the table
+figure;
+
+% Define the data for the table
+table_data = table(image_size_opt, iterations_opt, ...
+                   'VariableNames', {'ImageSizePixels', 'NumberOfIterations'});
+
+% Determine the size of the figure based on the number of rows
+num_rows = height(table_data);
+fig_height = min(25 * num_rows, 400); % 25 pixels per row, max of 400
+
+% Create a uitable to display the data
+uitable('Data', table_data{:,:}, 'ColumnName', table_data.Properties.VariableNames, ...
+        'Position', [20, 20, 300, fig_height], 'RowStriping', 'on', ...
+        'FontSize', 10, 'ColumnWidth', {150, 150}); % Adjust column widths as necessary
