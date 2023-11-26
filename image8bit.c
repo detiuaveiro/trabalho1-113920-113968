@@ -145,11 +145,13 @@ void ImageInit(void) { ///
   InstrName[0] = "pixmem"; // InstrCount[0] will count pixel array acesses
   // Name other counters here...
   InstrName[1] = "blur_its";
+  InstrName[2] = "ilsi_its";
 }
 
 // Macros to simplify accessing instrumentation counters:
 #define PIXMEM InstrCount[0]
 #define BLUR_ITS InstrCount[1]
+#define ILSI_ITS InstrCount[2]
 
 // Add more macros here...
 
@@ -591,7 +593,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
   for (int i = 0; i < size; i++) {
     int cx = i % width;
     int cy = i / width;
-
+    ILSI_ITS += 1;
     if (ImageGetPixel(img1, x + cx, y + cy) != ImageGetPixel(img2, cx, cy)) {
       return 0;
     }
@@ -606,6 +608,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
 int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
+  assert(ImageValidRect(img1, 0, 0, img2->width, img2->height));
 
   int width1 = ImageWidth(img1);
   int height1 = ImageHeight(img1);
@@ -614,11 +617,12 @@ int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   for (int i = 0; i < size1; i++) {
     int cx = i % width1;
     int cy = i / width1;
-
     if (ImageMatchSubImage(img1, cx, cy, img2)) {
       *px = cx;
       *py = cy;
       return 1;
+    } else {
+      ILSI_ITS += 1;
     }
   }
 
