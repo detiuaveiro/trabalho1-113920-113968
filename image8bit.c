@@ -590,6 +590,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
   int height = ImageHeight(img2);
   int size = width * height;
 
+  // for each pixel check if it matches the corresponding pixel in img2
   for (int i = 0; i < size; i++) {
     int cx = i % width;
     int cy = i / width;
@@ -608,6 +609,7 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) {
 int ImageLocateSubImage(Image img1, int *px, int *py, Image img2) { ///
   assert(img1 != NULL);
   assert(img2 != NULL);
+  // check if img2 fits inside img1
   assert(ImageValidRect(img1, 0, 0, img2->width, img2->height));
 
   int width1 = ImageWidth(img1);
@@ -646,12 +648,17 @@ void ImageBlur(Image img, int dx, int dy) {
   int size = width * height;
   int *cumsum = malloc(sizeof(int) * size);
 
+  // the loop has the number of iterations of the size of the image plus the
+  // size of half of the rectangle to compensate for the delay in the blurring
+  // effect ( delay = half of the rectangle size ) when half of the size of the
+  // rectangle is claculated you can already start blurring the first pixel
   for (int i = 0; i < size + width * (dy + 1); i++) {
     BLUR_ITS += 1;
     int x = i % width;
     int y = i / width;
 
-    if (i < size) {
+    // calculate the cumulative sum of the rectangle
+    if (i < size) { // only until the end of the image
       int pixelValue = ImageGetPixel(img, x, y);
       int sum = pixelValue;
       if (x > 0)
@@ -663,7 +670,9 @@ void ImageBlur(Image img, int dx, int dy) {
       *(cumsum + i) = sum;
     }
 
+    // after the half of the rectangle is calculated, start blurring
     if (i >= width * (dy + 1)) {
+      // adjust the index to the correct position in the image
       int blur_index = i - width * (dy + 1);
 
       int bx = blur_index % width;
@@ -683,6 +692,8 @@ void ImageBlur(Image img, int dx, int dy) {
       int rectArea = (right - left + 1) * (bottom - top + 1);
       uint8 blurredPixel = (uint8)((_sum + rectArea / 2) / rectArea);
 
+      // since the blurring is done with the cumulative sum
+      // it's possible to update the image in place
       ImageSetPixel(img, bx, by, blurredPixel);
     }
   }
